@@ -15,6 +15,8 @@ type Options struct {
 	// Default channel name is the request path.
 	ChannelNameFunc func(*http.Request) string
 	// All usage logs end up in Logger
+	WelcomeFunc WelcomeMaker
+
 	Logger *log.Logger
 }
 

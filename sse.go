@@ -19,6 +19,8 @@ type Server struct {
 	closeChannel chan string
 }
 
+type WelcomeMaker func(channel string, lastEventID string) Message
+
 // NewServer creates a new SSE server.
 func NewServer(options *Options) *Server {
 	if options == nil {
@@ -88,7 +90,9 @@ func (s *Server) ServeHTTP(response http.ResponseWriter, request *http.Request) 
 
 		response.WriteHeader(http.StatusOK)
 		flusher.Flush()
-
+		message := s.welcomeMessage(channelName, lastEventID)
+		response.Write(message.Bytes())
+		flusher.Flush()
 		for msg := range c.send {
 			msg.retry = s.options.RetryInterval
 			response.Write(msg.Bytes())
@@ -261,4 +265,11 @@ func (s *Server) dispatch() {
 			return
 		}
 	}
+}
+func (s *Server) welcomeMessage(channel string, lastEventID string) Message {
+	var m Message
+	if s.options.WelcomeFunc != nil {
+		m = s.options.WelcomeFunc(channel, lastEventID)
+	}
+	return m
 }
